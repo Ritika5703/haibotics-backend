@@ -22,7 +22,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 // Middleware
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL, // your frontend
+    origin: "*", // your frontend
     credentials: true, // allow cookies, auth headers, etc.
   })
 );
