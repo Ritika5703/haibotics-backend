@@ -6,8 +6,11 @@ export const createUser = async (req, res) => {
 
   console.log("Received data:", req.body);
 
-  if (!clerkId) {
-    return res.status(400).json({ error: "clerkId is required" });
+  // Ensure all required fields are present
+  if (!clerkId || !email || !userId) {
+    return res
+      .status(400)
+      .json({ error: "clerkId, email, and userId are required" });
   }
 
   try {
@@ -20,7 +23,7 @@ export const createUser = async (req, res) => {
 
     console.log("✅ User processed (updated or created)", existingUser);
 
-    return res.status(201).json({ message: "User processed successfully" });
+    return res.status(200).json({ message: "User processed successfully" });
   } catch (error) {
     console.error("Error creating/updating user:", error);
 
@@ -35,6 +38,7 @@ export const createUser = async (req, res) => {
     return res.status(500).json({ error: "Error creating user" });
   }
 };
+
 // GET user by Clerk ID
 export const getUserByClerkId = async (req, res) => {
   const { clerkId } = req.params;
@@ -46,18 +50,21 @@ export const getUserByClerkId = async (req, res) => {
     res.status(500).json({ error: "Error fetching user" });
   }
 };
-// Deduct 25 credits
+
+// Deduct credits (default 25 credits)
 export const deductCredits = async (req, res) => {
-  const { clerkId } = req.body;
+  const { clerkId, amount = 25 } = req.body; // Use dynamic amount
 
   try {
     const user = await User.findOne({ clerkId });
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    if (user.credits < 25)
-      return res.status(403).json({ error: "Not enough credits" });
+    if (user.credits < amount)
+      return res
+        .status(403)
+        .json({ error: `Not enough credits to deduct ${amount}` });
 
-    user.credits -= 25;
+    user.credits -= amount;
     await user.save();
 
     res.status(200).json({ credits: user.credits });
@@ -65,6 +72,8 @@ export const deductCredits = async (req, res) => {
     res.status(500).json({ error: "Error deducting credits" });
   }
 };
+
+// Get user's current credits
 export const getUserCredits = async (req, res) => {
   const { clerkId } = req.body;
   try {
